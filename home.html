@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vocal-Bid</title>
+    <!-- Google Fonts - Inter (for modern typography) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Google Fonts - Fira Code (for monospace report output) -->
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400&display=swap" rel="stylesheet">
+    <style>
+        /* CSS Variables for easier theming */
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%); /* Body background */
+            --secondary-gradient: linear-gradient(45deg, #ff6b6b, #ee5a24); /* Voice button default */
+            --accent-gradient: linear-gradient(45deg, #00d2ff, #3a7bd5); /* Voice button listening */
+            --bid-button-gradient: linear-gradient(45deg, #27ae60, #2ecc71); /* Bid button */
+            --report-button-gradient: linear-gradient(45deg, #9b59b6, #8e44ad); /* Report button */
+            --card-background: rgba(255, 255, 255, 0.95);
+            --text-color-dark: #333;
+            --text-color-light: #fff;
+            --success-color: #27ae60;
+            --error-color: #e74c3c;
+            --info-color: #3498db;
+            --border-color-light: rgba(255, 255, 255, 0.18);
+            --shadow-light: 0 8px 32px rgba(31, 38, 135, 0.37);
+            --shadow-hover: 0 6px 20px rgba(0,0,0,0.3);
+            --spacing-unit: 16px; /* Base spacing unit */
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Modern font */
+            background: var(--primary-gradient);
+            min-height: 100vh;
+            color: var(--text-color-dark);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: calc(var(--spacing-unit) * 1.5); /* Increased padding */
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: calc(var(--spacing-unit) * 2);
+            color: var(--text-color-light);
+        }
+
+        .header h1 {
+            font-size: 2.8em; /* Slightly larger */
+            margin-bottom: calc(var(--spacing-unit) / 2);
+            text-shadow: 2px 2px 6px rgba(0,0,0,0.4); /* Stronger shadow */
+            letter-spacing: 1px;
+        }
+
+        .live-indicator {
+            background: var(--error-color);
+            color: var(--text-color-light);
+            padding: calc(var(--spacing-unit) / 2) var(--spacing-unit);
+            border-radius: 20px; /* More rounded */
+            font-size: 0.85em;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: var(--spacing-unit);
+            animation: blink 1.2s infinite alternate; /* Smoother blink */
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        @keyframes blink {
+            0% { opacity: 1; transform: scale(1); }
+            100% { opacity: 0.6; transform: scale(0.98); }
+        }
+
+        .voice-controls, .product-card, .reports-section {
+            background: var(--card-background);
+            backdrop-filter: blur(12px); /* Slightly more blur */
+            border-radius: 20px;
+            padding: calc(var(--spacing-unit) * 1.8); /* Increased padding */
+            margin-bottom: calc(var(--spacing-unit) * 2);
+            box-shadow: var(--shadow-light);
+            border: 1px solid var(--border-color-light);
+            transition: all 0.3s ease-out; /* Smoother transition */
+        }
+
+        .voice-controls h2, .reports-section h2 {
+            font-size: 1.8em;
+            color: var(--text-color-dark);
+            margin-bottom: var(--spacing-unit);
+            border-bottom: 2px solid rgba(0,0,0,0.05); /* Subtle separator */
+            padding-bottom: calc(var(--spacing-unit) / 2);
+        }
+
+        .voice-button {
+            background: var(--secondary-gradient);
+            color: var(--text-color-light);
+            border: none;
+            padding: var(--spacing-unit) calc(var(--spacing-unit) * 1.5);
+            border-radius: 50px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: calc(var(--spacing-unit) / 2);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            letter-spacing: 0.5px;
+        }
+
+        .voice-button:hover {
+            transform: translateY(-3px); /* More pronounced lift */
+            box-shadow: var(--shadow-hover);
+        }
+
+        .voice-button.listening {
+            background: var(--accent-gradient);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 210, 255, 0.7); }
+            70% { transform: scale(1.05); box-shadow: 0 0 0 15px rgba(0, 210, 255, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 210, 255, 0); }
+        }
+
+        .status {
+            margin-top: var(--spacing-unit);
+            padding: calc(var(--spacing-unit) / 2) var(--spacing-unit);
+            border-radius: 10px;
+            background: rgba(0,0,0,0.08); /* Lighter background */
+            font-weight: bold;
+            color: var(--text-color-dark);
+            border-left: 4px solid var(--info-color); /* Info border */
+        }
+
+        .status.success { border-color: var(--success-color); }
+        .status.error { border-color: var(--error-color); }
+
+        .voice-commands-info {
+            margin-top: var(--spacing-unit);
+            font-size: 0.9em;
+            color: #666;
+            background: rgba(0,0,0,0.03);
+            padding: var(--spacing-unit);
+            border-radius: 10px;
+            border: 1px dashed rgba(0,0,0,0.1);
+        }
+        .voice-commands-info strong { color: var(--text-color-dark); }
+        .voice-commands-info ul {
+            list-style: none;
+            padding-left: 0;
+            margin-top: calc(var(--spacing-unit) / 2);
+        }
+        .voice-commands-info li {
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+        }
+        .voice-commands-info li::before {
+            content: '•';
+            color: var(--info-color);
+            font-weight: bold;
+            display: inline-block;
+            width: 1em;
+            margin-left: -1em;
+        }
+
+
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); /* Slightly smaller min-width for better fit */
+            gap: calc(var(--spacing-unit) * 1.5);
+            margin-bottom: calc(var(--spacing-unit) * 2);
+        }
+
+        .product-card {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between; /* Distribute content vertically */
+            height: 100%; /* Ensure cards are same height */
+        }
+
+        .product-card:hover {
+            transform: translateY(-8px); /* More pronounced lift */
+            box-shadow: 0 12px 40px rgba(31, 38, 135, 0.45); /* Stronger shadow on hover */
+        }
+
+        .product-image {
+            width: 100%;
+            height: 180px; /* Slightly smaller height */
+            background: linear-gradient(45deg, #f093fb, #f5576c);
+            border-radius: 15px;
+            margin-bottom: var(--spacing-unit);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8em; /* Smaller font for product name */
+            color: var(--text-color-light);
+            font-weight: bold;
+            overflow: hidden; /* Ensure content stays within */
+            position: relative;
+        }
+        .product-image::before { /* Subtle overlay */
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.1);
+            border-radius: 15px;
+        }
+
+        .product-title {
+            font-size: 1.6em; /* Slightly larger */
+            font-weight: bold;
+            margin-bottom: calc(var(--spacing-unit) / 2);
+            color: var(--text-color-dark);
+            line-height: 1.2;
+        }
+
+        .product-description {
+            font-size: 0.95em;
+            color: #555;
+            margin-bottom: var(--spacing-unit);
+        }
+
+        .current-bid {
+            font-size: 2.2em; /* Larger bid amount */
+            font-weight: bold;
+            color: var(--success-color);
+            margin: calc(var(--spacing-unit) / 2) 0;
+            display: flex;
+            align-items: center;
+        }
+        .current-bid::before {
+            content: '💰'; /* Emoji icon */
+            margin-right: 8px;
+            font-size: 0.8em;
+        }
+
+        .bid-count {
+            background: var(--info-color);
+            color: var(--text-color-light);
+            padding: 6px 12px; /* Slightly smaller padding */
+            border-radius: 20px;
+            display: inline-flex; /* Use flex for icon alignment */
+            align-items: center;
+            margin: calc(var(--spacing-unit) / 2) 0 var(--spacing-unit);
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+        .bid-count::before {
+            content: '📈'; /* Emoji icon */
+            margin-right: 6px;
+            font-size: 0.9em;
+        }
+
+        .bid-input {
+            width: 100%;
+            padding: calc(var(--spacing-unit) / 2) var(--spacing-unit); /* Adjusted padding */
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 1em;
+            margin: calc(var(--spacing-unit) / 2) 0;
+            transition: border-color 0.3s ease;
+        }
+        .bid-input:focus {
+            outline: none;
+            border-color: var(--info-color);
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+        }
+
+        .bid-button {
+            background: var(--bid-button-gradient);
+            color: var(--text-color-light);
+            border: none;
+            padding: calc(var(--spacing-unit) / 2) var(--spacing-unit);
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: calc(var(--spacing-unit) / 2);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        }
+
+        .bid-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+        }
+
+        .bid-button:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .bid-history {
+            margin-top: var(--spacing-unit);
+            padding-top: calc(var(--spacing-unit) / 2);
+            border-top: 1px dashed rgba(0,0,0,0.1); /* Dashed separator */
+        }
+        .bid-history strong {
+            display: block;
+            margin-bottom: calc(var(--spacing-unit) / 2);
+            color: #555;
+        }
+
+        .bid-history-item {
+            background: #ecf0f1;
+            padding: 8px 12px;
+            margin: 5px 0;
+            border-radius: 8px;
+            border-left: 4px solid var(--info-color); /* Stronger border */
+            font-size: 0.9em;
+            color: #444;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .bid-history-item span:last-child {
+            font-size: 0.8em;
+            color: #777;
+        }
+
+        .reports-section {
+            padding-bottom: calc(var(--spacing-unit) * 1.5); /* Adjusted padding */
+        }
+
+        .report-buttons {
+            display: flex;
+            gap: var(--spacing-unit); /* Consistent gap */
+            margin-bottom: calc(var(--spacing-unit) * 1.5);
+            flex-wrap: wrap;
+            justify-content: center; /* Center buttons */
+        }
+
+        .report-button {
+            background: var(--report-button-gradient);
+            color: var(--text-color-light);
+            border: none;
+            padding: calc(var(--spacing-unit) / 2) var(--spacing-unit);
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            gap: 8px; /* Space for icon */
+        }
+
+        .report-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+        }
+
+        .report-output {
+            background: #f8f9fa;
+            padding: calc(var(--spacing-unit) * 1.2);
+            border-radius: 10px;
+            border-left: 5px solid var(--info-color); /* Stronger border */
+            font-family: 'Fira Code', 'Courier New', monospace; /* More modern monospace font */
+            white-space: pre-wrap;
+            max-height: 350px; /* Slightly taller */
+            overflow-y: auto;
+            font-size: 0.9em;
+            line-height: 1.5;
+            color: #333;
+            box-shadow: inset 0 1px 5px rgba(0,0,0,0.05); /* Inner shadow */
+        }
+
+        /* Scrollbar styling for report output */
+        .report-output::-webkit-scrollbar {
+            width: 8px;
+        }
+        .report-output::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        .report-output::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
+        }
+        .report-output::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        .error {
+            color: var(--error-color);
+            font-weight: bold;
+        }
+
+        .success {
+            color: var(--success-color);
+            font-weight: bold;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .container {
+                padding: var(--spacing-unit);
+            }
+            
+            .products-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .report-buttons {
+                flex-direction: column;
+                align-items: stretch; /* Stretch buttons to full width */
+            }
+            .report-button {
+                width: 100%;
+            }
+            .voice-button {
+                width: calc(100% - var(--spacing-unit)); /* Adjust for margin */
+                margin: calc(var(--spacing-unit) / 2) 0;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 2em;
+            }
+            .voice-controls h2, .reports-section h2 {
+                font-size: 1.5em;
+            }
+            .product-title {
+                font-size: 1.4em;
+            }
+            .current-bid {
+                font-size: 1.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 Vocal-Bid</h1>
+            <div class="live-indicator">🔴 LIVE AUCTION</div>
+        </div>
+
+        <div class="voice-controls">
+            <h2>🎤 Voice Commands</h2>
+            <button id="startListening" class="voice-button">▶️ Start Voice Control</button>
+            <button id="stopListening" class="voice-button">⏹️ Stop Voice Control</button>
+            <div class="status" id="voiceStatus">Voice control ready. Click "Start Voice Control" to begin.</div>
+            <div class="voice-commands-info">
+                <strong>Voice Commands:</strong>
+                <ul>
+                    <li>"Auction [amount] on [product name]" - Place a bid</li>
+                    <li>"Show report" or "Generate report" - Display auction statistics</li>
+                    <li>"Show history" - Display bidding history</li>
+                    <li>"Highest bid" - Display the highest bid report</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="products-grid" id="productsGrid">
+            <!-- Products will be dynamically generated -->
+        </div>
+
+        <div class="reports-section">
+            <h2>📊 Auction Reports</h2>
+            <div class="report-buttons">
+                <button class="report-button" onclick="generateBidCountReport()">📈 Total Bids per Product</button>
+                <button class="report-button" onclick="generateHighestBidReport()">🏆 Highest Bids Report</button>
+                <button class="report-button" onclick="generateFullHistoryReport()">📜 Full Bidding History</button>
+                <button class="report-button" onclick="clearReports()">🧹 Clear Reports</button>
+            </div>
+            <div class="report-output" id="reportOutput">Reports will appear here...</div>
+        </div>
+    </div>
+
+    <script>
+        // Auction System Core Data
+        const auctionData = {
+            products: [
+                {
+                    id: 1,
+                    name: "Vintage Watch",
+                    description: "Rare 1950s timepiece",
+                    currentBid: 250,
+                    bidCount: 0,
+                    bidHistory: []
+                },
+                {
+                    id: 2,
+                    name: "Antique Vase",
+                    description: "Ming Dynasty ceramic vase",
+                    currentBid: 500,
+                    bidCount: 0,
+                    bidHistory: []
+                },
+                {
+                    id: 3,
+                    name: "Classic Painting",
+                    description: "Oil painting from local artist",
+                    currentBid: 750,
+                    bidCount: 0,
+                    bidHistory: []
+                },
+                {
+                    id: 4,
+                    name: "Diamond Ring",
+                    description: "2 carat diamond engagement ring",
+                    currentBid: 2000,
+                    bidCount: 0,
+                    bidHistory: []
+                }
+            ]
+        };
+
+        // Voice Recognition Setup
+        let recognition;
+        let isListening = false;
+
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+            recognition.continuous = true;
+            recognition.interimResults = false;
+            recognition.lang = 'en-US';
+
+            recognition.onstart = () => {
+                isListening = true;
+                updateVoiceStatus("🎤 Listening... Speak your command now!", 'info');
+                document.getElementById('startListening').classList.add('listening');
+            };
+
+            recognition.onend = () => {
+                isListening = false;
+                updateVoiceStatus("Voice control stopped.", 'info');
+                document.getElementById('startListening').classList.remove('listening');
+            };
+
+            recognition.onresult = (event) => {
+                const lastResult = event.results[event.results.length - 1];
+                const command = lastResult[0].transcript.toLowerCase().trim();
+                updateVoiceStatus(`Heard: "${command}"`, 'info');
+                processVoiceCommand(command);
+            };
+
+            recognition.onerror = (event) => {
+                updateVoiceStatus(`❌ Error: ${event.error}`, 'error');
+            };
+        } else {
+            updateVoiceStatus("❌ Voice recognition not supported in this browser.", 'error');
+        }
+
+        // Voice Control Functions
+        function startListening() {
+            if (recognition && !isListening) {
+                recognition.start();
+            }
+        }
+
+        function stopListening() {
+            if (recognition && isListening) {
+                recognition.stop();
+            }
+        }
+
+        function updateVoiceStatus(message, type = 'info') { // 'info', 'success', 'error'
+            const voiceStatusDiv = document.getElementById('voiceStatus');
+            voiceStatusDiv.textContent = message;
+            voiceStatusDiv.className = `status ${type}`; // Add type class
+        }
+
+        function processVoiceCommand(command) {
+            // --- 1. Process Auction Commands (Prioritize "auction" and its variations) ---
+            const auctionPattern = /(?:auction|b(?:i|e|a)d|b(?:i|e|a)t|b(?:i|e|a)g)\s+(?:a\s+|an\s+)?(\d+)\s+on\s+(.+)/i;
+            const auctionMatch = command.match(auctionPattern);
+
+            if (auctionMatch) {
+                const bidAmount = parseInt(auctionMatch[1]);
+                let rawProductName = auctionMatch[2].trim();
+                
+                // Clean up product name by removing common trailing words if present
+                rawProductName = rawProductName
+                    .replace(/please$/, '') // remove 'please' at the end
+                    .replace(/product$/, '') // remove 'product' at the end
+                    .replace(/on$/, '') // remove 'on' if it's mistakenly captured at the end
+                    .trim();
+
+                handleVoiceBid(bidAmount, rawProductName); // Pass the cleaned name
+                return; // Command handled, exit
+            }
+
+            // --- 2. Process Report Commands ---
+            if (command.includes('show report') || command.includes('generate report') || command.includes('report statistics')) {
+                generateBidCountReport();
+                updateVoiceStatus("✅ Generated bid count report", 'success');
+                return;
+            }
+
+            if (command.includes('show history') || command.includes('auction history') || command.includes('bidding history')) {
+                generateFullHistoryReport();
+                updateVoiceStatus("✅ Generated bidding history", 'success');
+                return;
+            }
+
+            if (command.includes('highest bid') || command.includes('show highest bid') || command.includes('top bid')) {
+                generateHighestBidReport();
+                updateVoiceStatus("✅ Generated highest bid report", 'success');
+                return;
+            }
+
+            // --- 3. Fallback for Unrecognized Commands ---
+            updateVoiceStatus(`❓ Command not recognized: "${command}". Try "Auction [amount] on [product name]".`, 'error');
+        }
+
+        function handleVoiceBid(amount, productName) {
+            const normalizedProductName = productName.toLowerCase();
+
+            const product = auctionData.products.find(p => 
+                normalizedProductName.includes(p.name.toLowerCase()) ||
+                p.name.toLowerCase().includes(normalizedProductName) ||
+                (normalizedProductName.includes('watch') && p.name.toLowerCase().includes('watch')) ||
+                (normalizedProductName.includes('vase') && p.name.toLowerCase().includes('vase')) ||
+                (normalizedProductName.includes('painting') && p.name.toLowerCase().includes('painting')) ||
+                (normalizedProductName.includes('ring') && p.name.toLowerCase().includes('ring'))
+            );
+
+            if (!product) {
+                updateVoiceStatus(`❌ Product "${productName}" not found. Please try again.`, 'error');
+                return;
+            }
+
+            const result = placeBid(product.id, amount, 'Voice User');
+            updateVoiceStatus(result.success ? 
+                `✅ Bid placed: $${amount} on ${product.name}` : 
+                `❌ ${result.message}`,
+                result.success ? 'success' : 'error'
+            );
+        }
+
+        // Auction Logic Functions
+        function placeBid(productId, bidAmount, bidder = 'Anonymous') {
+            const product = auctionData.products.find(p => p.id === productId);
+            
+            if (!product) {
+                return { success: false, message: 'Product not found' };
+            }
+
+            if (bidAmount <= product.currentBid) {
+                return { 
+                    success: false, 
+                    message: `Bid must be higher than current bid of $${product.currentBid}` 
+                };
+            }
+
+            const bidRecord = {
+                amount: bidAmount,
+                bidder: bidder,
+                timestamp: new Date().toLocaleString(),
+                previousBid: product.currentBid
+            };
+
+            product.bidHistory.push(bidRecord);
+            product.currentBid = bidAmount;
+            product.bidCount++;
+
+            renderProducts();
+            simulateAuctionActivity();
+
+            return { success: true, message: 'Bid placed successfully' };
+        }
+
+        // UI Rendering Functions
+        function renderProducts() {
+            const grid = document.getElementById('productsGrid');
+            grid.innerHTML = '';
+
+            auctionData.products.forEach(product => {
+                const productCard = document.createElement('div');
+                productCard.className = 'product-card';
+                productCard.innerHTML = `
+                    <div class="product-image">📦 ${product.name}</div>
+                    <div class="product-title">${product.name}</div>
+                    <div class="product-description">${product.description}</div>
+                    <div class="current-bid">$${product.currentBid.toLocaleString()}</div>
+                    <div class="bid-count">${product.bidCount} bids</div>
+                    <input type="number" class="bid-input" id="bid-${product.id}" 
+                           placeholder="Enter your bid amount" min="${product.currentBid + 1}">
+                    <button class="bid-button" onclick="handleManualBid(${product.id})">
+                        Place Bid
+                    </button>
+                    ${product.bidHistory.length > 0 ? `
+                        <div class="bid-history">
+                            <strong>Recent Bids:</strong>
+                            ${product.bidHistory.slice(-3).reverse().map(bid => `
+                                <div class="bid-history-item">
+                                    <span>$${bid.amount} by ${bid.bidder}</span>
+                                    <span>${bid.timestamp}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    ` : ''}
+                `;
+                grid.appendChild(productCard);
+            });
+        }
+
+        function handleManualBid(productId) {
+            const bidInput = document.getElementById(`bid-${productId}`);
+            const bidAmount = parseInt(bidInput.value);
+
+            if (isNaN(bidAmount) || bidAmount <= 0) {
+                alert('Please enter a valid bid amount');
+                return;
+            }
+
+            const result = placeBid(productId, bidAmount, 'Manual User');
+            
+            if (result.success) {
+                bidInput.value = '';
+                alert('Bid placed successfully!');
+            } else {
+                alert(result.message);
+            }
+        }
+
+        // Report Generation Functions
+        function generateBidCountReport() {
+            let report = "=== TOTAL BIDS PER PRODUCT ===\n\n";
+            auctionData.products.forEach(product => {
+                report += `${product.name}: ${product.bidCount} bids\n`;
+            });
+            report += `\nTotal bids across all products: ${auctionData.products.reduce((sum, p) => sum + p.bidCount, 0)}`;
+            document.getElementById('reportOutput').textContent = report;
+        }
+
+        function generateHighestBidReport() {
+            let report = "=== HIGHEST BIDS REPORT ===\n\n";
+            auctionData.products.forEach(product => {
+                report += `${product.name}: $${product.currentBid.toLocaleString()}\n`;
+            });
+            
+            const highestBidProduct = auctionData.products.reduce((prev, current) => 
+                prev.currentBid > current.currentBid ? prev : current
+            );
+            
+            report += `\nHighest bid overall: $${highestBidProduct.currentBid.toLocaleString()} (${highestBidProduct.name})`;
+            document.getElementById('reportOutput').textContent = report;
+        }
+
+        function generateFullHistoryReport() {
+            let report = "=== FULL BIDDING HISTORY ===\n\n";
+            
+            auctionData.products.forEach(product => {
+                report += `${product.name} (${product.bidCount} bids):\n`;
+                if (product.bidHistory.length === 0) {
+                    report += "  No bids yet\n";
+                } else {
+                    product.bidHistory.forEach((bid, index) => {
+                        report += `  ${index + 1}. $${bid.amount} by ${bid.bidder} at ${bid.timestamp}\n`;
+                    });
+                }
+                report += "\n";
+            });
+            
+            document.getElementById('reportOutput').textContent = report;
+        }
+
+        function clearReports() {
+            document.getElementById('reportOutput').textContent = "Reports cleared. Generate a new report to see data.";
+        }
+
+        // Simulate auction activity
+        function simulateAuctionActivity() {
+            setTimeout(() => {
+                if (Math.random() < 0.3) { // 30% chance
+                    const randomProduct = auctionData.products[Math.floor(Math.random() * auctionData.products.length)];
+                    const increment = Math.floor(Math.random() * 100) + 25;
+                    placeBid(randomProduct.id, randomProduct.currentBid + increment, 'Other Bidder');
+                }
+            }, Math.random() * 10000 + 5000); // Random delay between 5-15 seconds
+        }
+
+        // Event Listeners
+        document.getElementById('startListening').addEventListener('click', startListening);
+        document.getElementById('stopListening').addEventListener('click', stopListening);
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', () => {
+            renderProducts();
+            
+            // Start some simulated activity
+            setTimeout(() => {
+                simulateAuctionActivity();
+            }, 3000);
+        });
+
+        // Periodic updates to make auction feel live
+        setInterval(() => {
+            if (Math.random() < 0.1) { // 10% chance every 3 seconds
+                simulateAuctionActivity();
+            }
+        }, 3000);
+    </script>
+</body>
+</html>
